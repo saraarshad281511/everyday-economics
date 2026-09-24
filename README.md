@@ -71,7 +71,7 @@ If you skip seeding, opening `/admin` asks you to create the first user.
 6. Visit `/admin`, create the first admin user, then add sections and articles.
 7. Add a custom domain in Vercel → *Settings → Domains*, then update `NEXT_PUBLIC_SERVER_URL` and redeploy.
 
-To load the sample content into production, run `pnpm seed` locally with `DATABASE_URL` pointing at the Neon database.
+To load the sample content into production, log in to `/admin` as an Admin, then open `/next/seed-demo` on the live site. It adds 6 sections, 3 sample authors, 19 articles and the About/Contact/Privacy pages. It is safe to open again: anything that already exists is skipped.
 
 ---
 
