@@ -49,6 +49,8 @@ export default buildConfig({
     // Stores uploaded images in Vercel Blob when deployed (local disk during development)
     vercelBlobStorage({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+      // Keep the database columns the same whether or not Blob is switched on
+      alwaysInsertFields: true,
       collections: { media: true },
       token: process.env.BLOB_READ_WRITE_TOKEN || '',
     }),

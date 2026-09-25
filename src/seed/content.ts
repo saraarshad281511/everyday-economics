@@ -252,10 +252,51 @@ const PAGES = [
   },
 ]
 
-export async function seedContent(payload: Payload, log: (msg: string) => void = () => {}) {
+export type SeedResult = {
+  articlesCreated: number
+  imagesAdded: number
+  totalArticles: number
+  imageError?: string
+  /** Pictures not added yet because time ran out – open the page again to continue */
+  imagesPending: number
+}
+
+export async function seedContent(
+  payload: Payload,
+  log: (msg: string) => void = () => {},
+  /** Stop uploading pictures after this many milliseconds (the rest are added on the next run) */
+  imageTimeBudgetMs = Infinity,
+): Promise<SeedResult> {
+  const deadline = Date.now() + imageTimeBudgetMs
   const findOne = async (collection: 'categories' | 'users' | 'posts' | 'pages', field: string, value: string) => {
     const res = await payload.find({ collection, where: { [field]: { equals: value } }, limit: 1, depth: 0 })
-    return res.docs[0] as { id: number } | undefined
+    return res.docs[0] as unknown as ({ id: number } & Record<string, unknown>) | undefined
+  }
+
+  // Images are optional: if uploading fails (e.g. storage not set up yet), the articles
+  // are still created without pictures. Running the seed again adds the missing images.
+  let imageError: string | undefined
+  let imagesAdded = 0
+  let imagesPending = 0
+  const uploadImage = async (alt: string, name: string, make: () => Promise<Buffer>, credit?: string) => {
+    if (imageError) return undefined
+    if (Date.now() > deadline) {
+      imagesPending++
+      return undefined
+    }
+    try {
+      const m = await payload.create({
+        collection: 'media',
+        data: { alt, ...(credit ? { credit } : {}) },
+        file: { data: await make(), mimetype: 'image/jpeg', name, size: 0 },
+        context: ctx,
+      })
+      imagesAdded++
+      return m.id
+    } catch (err) {
+      imageError = (err as Error)?.message || String(err)
+      return undefined
+    }
   }
 
   log('Sections…')
@@ -276,17 +317,18 @@ export async function seedContent(payload: Payload, log: (msg: string) => void =
   for (const [i, a] of AUTHORS.entries()) {
     const email = `author${i + 1}@example.com`
     const existing = await findOne('users', 'email', email)
+    const initials = a.name.split(' ').map((w) => w[0]).join('')
+    const makePhoto = () =>
+      uploadImage(`Portrait of ${a.name}`, `author-${i + 1}.jpg`, () => makeAvatar(initials, a.color))
     if (existing) {
       authorIds.push(existing.id)
+      if (!existing.photo) {
+        const photo = await makePhoto()
+        if (photo) await payload.update({ collection: 'users', id: existing.id, data: { photo }, context: ctx })
+      }
       continue
     }
-    const initials = a.name.split(' ').map((w) => w[0]).join('')
-    const photo = await payload.create({
-      collection: 'media',
-      data: { alt: `Portrait of ${a.name}` },
-      file: { data: await makeAvatar(initials, a.color), mimetype: 'image/jpeg', name: `author-${i + 1}.jpg`, size: 0 },
-      context: ctx,
-    })
+    const photo = await makePhoto()
     const u = await payload.create({
       collection: 'users',
       data: {
@@ -297,7 +339,7 @@ export async function seedContent(payload: Payload, log: (msg: string) => void =
         role: 'author',
         jobTitle: a.jobTitle,
         bio: a.bio,
-        photo: photo.id,
+        ...(photo ? { photo } : {}),
       },
       context: ctx,
     })
@@ -309,13 +351,22 @@ export async function seedContent(payload: Payload, log: (msg: string) => void =
   let created = 0
   for (const [i, a] of ARTICLES.entries()) {
     const slug = slugify(a.title)
-    if (await findOne('posts', 'slug', slug)) continue
-    const image = await payload.create({
-      collection: 'media',
-      data: { alt: `Illustration for “${a.title}”`, credit: 'Sample illustration' },
-      file: { data: await makeArt(i + 3, PALETTES[a.section]), mimetype: 'image/jpeg', name: `article-${i + 1}.jpg`, size: 0 },
-      context: ctx,
-    })
+    const makeImage = () =>
+      uploadImage(
+        `Illustration for “${a.title}”`,
+        `article-${i + 1}.jpg`,
+        () => makeArt(i + 3, PALETTES[a.section]),
+        'Sample illustration',
+      )
+    const existing = await findOne('posts', 'slug', slug)
+    if (existing) {
+      if (!existing.heroImage) {
+        const image = await makeImage()
+        if (image) await payload.update({ collection: 'posts', id: existing.id, data: { heroImage: image }, context: ctx })
+      }
+      continue
+    }
+    const image = await makeImage()
     const [first, ...rest] = a.body
     const children = [
       p(first),
@@ -331,7 +382,7 @@ export async function seedContent(payload: Payload, log: (msg: string) => void =
         title: a.title,
         slug,
         standfirst: a.standfirst,
-        heroImage: image.id,
+        ...(image ? { heroImage: image } : {}),
         content: doc(...children) as never,
         category: sectionIds[a.section],
         authors: [authorIds[a.author]],
@@ -353,5 +404,5 @@ export async function seedContent(payload: Payload, log: (msg: string) => void =
     await payload.create({ collection: 'pages', data: { ...pg, content: pg.content as never, showInFooter: true }, context: ctx })
   }
 
-  return { articlesCreated: created, totalArticles: ARTICLES.length }
+  return { articlesCreated: created, imagesAdded, totalArticles: ARTICLES.length, imageError, imagesPending }
 }
