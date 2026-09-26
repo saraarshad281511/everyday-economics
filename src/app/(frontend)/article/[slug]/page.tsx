@@ -3,12 +3,21 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React from 'react'
 import { Img } from '@/components/site/Img'
+import { ArticleActions } from '@/components/site/interactive/ArticleActions'
+import { ReadingProgress } from '@/components/site/interactive/ReadingProgress'
+import { ViewTracker } from '@/components/site/interactive/ViewTracker'
+import { draftMode } from 'next/headers'
 import { RichText } from '@/components/site/RichText'
 import { StoryCard } from '@/components/site/StoryCard'
 import { asAuthors, asCategory, asMedia, formatDate, siteURL } from '@/lib/format'
-import { findPosts, getPostBySlug, getSiteSettings } from '@/lib/payload'
+import { findPosts, getPostBySlug, getRecentSlugs, getSiteSettings } from '@/lib/payload'
 
 export const revalidate = 60
+
+// Pre-build the latest articles; any others are built on first visit and then saved
+export async function generateStaticParams() {
+  return getRecentSlugs(50)
+}
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -38,7 +47,7 @@ export default async function ArticlePage({ params }: Props) {
   const post = await getPostBySlug(slug)
   if (!post) notFound()
 
-  const settings = await getSiteSettings()
+  const [settings, draft] = await Promise.all([getSiteSettings(), draftMode()])
   const category = asCategory(post.category)
   const authors = asAuthors(post.authors)
   const image = asMedia(post.heroImage)
@@ -68,6 +77,8 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <article className="article">
+      <ReadingProgress />
+      {!draft.isEnabled && <ViewTracker id={post.id} />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="article__header container container--narrow">
         <p>
@@ -113,6 +124,14 @@ export default async function ArticlePage({ params }: Props) {
             <time dateTime={post.publishedAt || undefined}>{formatDate(post.publishedAt, true)}</time>
             {post.readingTime ? ` · ${post.readingTime} min read` : ''}
           </p>
+          <ArticleActions
+            article={{
+              slug: post.slug as string,
+              title: post.title,
+              standfirst: post.standfirst,
+              section: post.isOpinion ? 'Opinion' : category?.title,
+            }}
+          />
           <div className="share" aria-label="Share this article">
             <a href={`https://twitter.com/intent/tweet?text=${shareText}&url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">X</a>
             <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -121,7 +140,9 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         </div>
 
-        <RichText data={post.content} className="prose" />
+        <div id="article-body">
+          <RichText data={post.content} className="prose" />
+        </div>
 
         {post.tags && post.tags.length > 0 && (
           <ul className="tags" aria-label="Topics">

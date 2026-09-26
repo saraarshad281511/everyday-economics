@@ -73,6 +73,7 @@ export interface Config {
     media: Media;
     users: User;
     subscribers: Subscriber;
+    'page-views': PageView;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +87,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
+    'page-views': PageViewsSelect<false> | PageViewsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -374,6 +376,17 @@ export interface Subscriber {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-views".
+ */
+export interface PageView {
+  id: number;
+  post?: (number | null) | Post;
+  count?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -419,6 +432,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'subscribers';
         value: number | Subscriber;
+      } | null)
+    | ({
+        relationTo: 'page-views';
+        value: number | PageView;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -621,6 +638,16 @@ export interface SubscribersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-views_select".
+ */
+export interface PageViewsSelect<T extends boolean = true> {
+  post?: T;
+  count?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -669,6 +696,24 @@ export interface SiteSetting {
   tagline?: string | null;
   newsletterHeading?: string | null;
   newsletterText?: string | null;
+  /**
+   * The scrolling strip of market figures under the menu. Only shown when switched on and at least one item is filled in.
+   */
+  ticker?: {
+    show?: boolean | null;
+    items?:
+      | {
+          label: string;
+          value: string;
+          /**
+           * Start with + or −
+           */
+          change?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    note?: string | null;
+  };
   social?: {
     x?: string | null;
     linkedin?: string | null;
@@ -686,6 +731,20 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   tagline?: T;
   newsletterHeading?: T;
   newsletterText?: T;
+  ticker?:
+    | T
+    | {
+        show?: T;
+        items?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              change?: T;
+              id?: T;
+            };
+        note?: T;
+      };
   social?:
     | T
     | {

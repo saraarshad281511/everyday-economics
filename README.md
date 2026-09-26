@@ -18,6 +18,14 @@ The public site and the writing dashboard live in the same app:
 - SEO: page titles and descriptions, social share images, `sitemap.xml`, `robots.txt`, RSS at `/feed.xml`, NewsArticle structured data
 - Newsletter sign-up (emails are saved in the dashboard under *Newsletter subscribers*)
 
+**Interactive features**
+- Sticky menu bar (shows a compact site name once you scroll), reading progress bar on articles
+- Dark mode button (remembers each reader's choice, follows their device setting by default)
+- "Save for later" on articles plus a **Saved** page (kept in the reader's own browser), "Copy link" button
+- Search-as-you-type on the search page (arrow keys + Enter work too)
+- **Most read** list on the homepage, based on real reads (one per reader per visit, after a few seconds on the page)
+- Markets ticker under the menu. Edit it in **Dashboard → Site settings → Markets ticker** (switch on, add items like `USD/PKR · 281.50 · +0.2%`). Hidden until switched on.
+
 **Dashboard (Payload CMS)**
 - Rich-text editor with headings, quotes, lists, links and images (type `/` for the menu)
 - Autosaving drafts, version history, **Preview** button (shows the draft on the real site)
@@ -116,8 +124,10 @@ src/
 - After changing a collection: `pnpm generate:types`. After adding dashboard components: `pnpm generate:importmap`.
 - Pages refresh every 60 seconds, and immediately whenever something is saved in the dashboard.
 
+### Checking picture uploads
+Log in to `/admin` as an Admin, then open `/next/check-images`. It uploads a tiny test picture, checks it can be viewed, deletes it, and shows a step-by-step report.
+
 ### Ideas for phase 2
 - Paywall / memberships (Stripe + a `subscriber` role, with an `isPremium` switch on articles)
 - Sending the newsletter (Resend or Mailchimp integration)
-- "Most read" list (view tracking or analytics API)
 - Comments, dark mode, live preview side-by-side in the editor

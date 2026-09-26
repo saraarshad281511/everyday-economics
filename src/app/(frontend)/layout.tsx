@@ -1,5 +1,6 @@
 import '@fontsource-variable/source-serif-4'
 import '@fontsource-variable/inter'
+import '@fontsource-variable/plus-jakarta-sans'
 import './styles.css'
 
 import type { Metadata } from 'next'
@@ -7,6 +8,7 @@ import { draftMode } from 'next/headers'
 import React from 'react'
 import { Footer } from '@/components/site/Footer'
 import { Header } from '@/components/site/Header'
+import { themeScript } from '@/components/site/interactive/ThemeToggle'
 import { siteURL } from '@/lib/format'
 import { getCategories, getFooterPages, getSiteSettings } from '@/lib/payload'
 
@@ -30,7 +32,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ])
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <a href="#main" className="skip-link">
           Skip to content
@@ -40,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             You are previewing unpublished changes. <a href="/next/exit-preview">Exit preview</a>
           </div>
         )}
-        <Header siteName={settings.siteName} tagline={settings.tagline} categories={categories} />
+        <Header siteName={settings.siteName} tagline={settings.tagline} categories={categories} ticker={settings.ticker} />
         <main id="main">{children}</main>
         <Footer settings={settings} categories={categories} pages={pages} />
       </body>

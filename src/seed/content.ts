@@ -20,18 +20,18 @@ const SECTIONS = [
 ]
 
 const PALETTES: Record<string, [string, string, string]> = {
-  economy: ['#e9dfcc', '#0f3d3e', '#9b2c2c'],
-  markets: ['#10292a', '#3f8f86', '#e8c9a0'],
-  business: ['#efe6d6', '#274c77', '#d17a22'],
-  'personal-finance': ['#f3ead8', '#5b7f3a', '#1b1a17'],
-  technology: ['#1d2230', '#6c8cff', '#f2c14e'],
-  'life-arts': ['#f1e1d6', '#9b2c2c', '#3d5a80'],
+  economy: ['#e8edf5', '#1d3f8f', '#c2410c'],
+  markets: ['#0f1a33', '#3b6fd9', '#f59e0b'],
+  business: ['#eef1f5', '#334155', '#ea580c'],
+  'personal-finance': ['#ecf5ef', '#15803d', '#1d3f8f'],
+  technology: ['#141b2d', '#6366f1', '#22d3ee'],
+  'life-arts': ['#fbeee6', '#c2410c', '#1d3f8f'],
 }
 
 const AUTHORS = [
-  { name: 'Amara Qureshi', jobTitle: 'Economics Editor', color: '#0f3d3e', bio: 'Amara writes about inflation, jobs and central banks, with a focus on what the numbers mean for ordinary households.' },
-  { name: 'Daniel Okafor', jobTitle: 'Markets Correspondent', color: '#274c77', bio: 'Daniel covers global markets, from bond yields to commodity prices, and how they ripple through the real economy.' },
-  { name: 'Leila Haddad', jobTitle: 'Personal Finance Writer', color: '#9b2c2c', bio: 'Leila helps readers make sense of budgets, savings and investing, one plain-English guide at a time.' },
+  { name: 'Amara Qureshi', jobTitle: 'Economics Editor', color: '#1d3f8f', bio: 'Amara writes about inflation, jobs and central banks, with a focus on what the numbers mean for ordinary households.' },
+  { name: 'Daniel Okafor', jobTitle: 'Markets Correspondent', color: '#334155', bio: 'Daniel covers global markets, from bond yields to commodity prices, and how they ripple through the real economy.' },
+  { name: 'Leila Haddad', jobTitle: 'Personal Finance Writer', color: '#c2410c', bio: 'Leila helps readers make sense of budgets, savings and investing, one plain-English guide at a time.' },
 ]
 
 type Seed = {
@@ -396,6 +396,23 @@ export async function seedContent(
       context: ctx,
     })
     created++
+  }
+
+  // Give the sample articles a few starting reads so the "Most read" list isn't empty in the demo
+  const existingViews = await payload.count({ collection: 'page-views' })
+  if (!existingViews.totalDocs) {
+    const picks = [0, 3, 9, 12, 16, 6]
+    for (const [rank, idx] of picks.entries()) {
+      const post = await findOne('posts', 'slug', slugify(ARTICLES[idx].title))
+      if (post) {
+        await payload.create({
+          collection: 'page-views',
+          data: { post: post.id, count: (picks.length - rank) * 7 },
+          overrideAccess: true,
+          context: ctx,
+        })
+      }
+    }
   }
 
   log('Pages…')

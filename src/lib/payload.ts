@@ -65,3 +65,33 @@ export const getPostBySlug = cache(async (slug: string) => {
   })
   return res.docs[0] ?? null
 })
+
+/** The most-read live articles (for the "Most read" list) */
+export async function getMostRead(limit = 5) {
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    collection: 'page-views',
+    sort: '-count',
+    limit: limit * 3,
+    depth: 2,
+    where: { count: { greater_than: 0 } },
+  })
+  const now = Date.now()
+  return res.docs
+    .map((v) => (typeof v.post === 'object' ? v.post : null))
+    .filter(
+      (p): p is NonNullable<typeof p> =>
+        Boolean(p) && p!._status === 'published' && Boolean(p!.publishedAt) && new Date(p!.publishedAt!).getTime() <= now,
+    )
+    .slice(0, limit)
+}
+
+/** Slugs of recent articles, so they can be pre-built for speed */
+export async function getRecentSlugs(limit = 50) {
+  try {
+    const res = await findPosts({ limit })
+    return res.docs.map((p) => ({ slug: p.slug as string }))
+  } catch {
+    return []
+  }
+}

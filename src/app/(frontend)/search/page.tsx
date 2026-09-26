@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { Where } from 'payload'
 import React from 'react'
+import { LiveSearch } from '@/components/site/interactive/LiveSearch'
 import { Pagination } from '@/components/site/Pagination'
 import { StoryCard } from '@/components/site/StoryCard'
 import { findPosts } from '@/lib/payload'
@@ -26,13 +27,7 @@ export default async function SearchPage({ searchParams }: Props) {
     <div className="container">
       <header className="page-header">
         <h1 className="page-header__title">{tag ? `Topic: ${tag}` : 'Search'}</h1>
-        <form className="search-form" action="/search" role="search">
-          <label htmlFor="q" className="sr-only">
-            Search articles
-          </label>
-          <input id="q" name="q" type="search" defaultValue={q} placeholder="Search articles…" autoFocus={!q && !tag} />
-          <button className="btn">Search</button>
-        </form>
+        <LiveSearch initial={q} autoFocus={!q && !tag} />
       </header>
       {results && (
         <>

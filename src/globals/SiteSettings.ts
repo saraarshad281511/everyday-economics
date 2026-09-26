@@ -26,6 +26,38 @@ export const SiteSettings: GlobalConfig = {
       defaultValue: 'One email every Sunday: the week’s biggest economic stories, in plain English.',
     },
     {
+      name: 'ticker',
+      label: 'Markets ticker',
+      type: 'group',
+      admin: {
+        description:
+          'The scrolling strip of market figures under the menu. Only shown when switched on and at least one item is filled in.',
+      },
+      fields: [
+        { name: 'show', label: 'Show the ticker', type: 'checkbox', defaultValue: false },
+        {
+          name: 'items',
+          type: 'array',
+          labels: { singular: 'Item', plural: 'Items' },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                { name: 'label', type: 'text', required: true, admin: { placeholder: 'USD/PKR', width: '34%' } },
+                { name: 'value', type: 'text', required: true, admin: { placeholder: '281.50', width: '33%' } },
+                {
+                  name: 'change',
+                  type: 'text',
+                  admin: { placeholder: '+0.2%', width: '33%', description: 'Start with + or −' },
+                },
+              ],
+            },
+          ],
+        },
+        { name: 'note', type: 'text', admin: { placeholder: 'Updated daily' } },
+      ],
+    },
+    {
       name: 'social',
       type: 'group',
       fields: [

@@ -9,6 +9,7 @@ import sharp from 'sharp'
 import { Categories } from './collections/Categories'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
+import { PageViews } from './collections/PageViews'
 import { Posts } from './collections/Posts'
 import { Subscribers } from './collections/Subscribers'
 import { Users } from './collections/Users'
@@ -32,7 +33,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Posts, Categories, Pages, Media, Users, Subscribers],
+  collections: [Posts, Categories, Pages, Media, Users, Subscribers, PageViews],
   globals: [SiteSettings],
   editor: lexicalEditor({
     features: ({ defaultFeatures }) => [...defaultFeatures, FixedToolbarFeature()],

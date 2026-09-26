@@ -1,19 +1,21 @@
 import type { Post } from '@/payload-types'
 import Link from 'next/link'
 import React from 'react'
+import { MostRead } from '@/components/site/MostRead'
 import { Newsletter } from '@/components/site/Newsletter'
 import { StoryCard } from '@/components/site/StoryCard'
-import { findPosts, getCategories, getSiteSettings } from '@/lib/payload'
+import { findPosts, getCategories, getMostRead, getSiteSettings } from '@/lib/payload'
 
 export const revalidate = 60
 
 export default async function HomePage() {
-  const [settings, categories, featured, latest, opinion] = await Promise.all([
+  const [settings, categories, featured, latest, opinion, mostRead] = await Promise.all([
     getSiteSettings(),
     getCategories(),
     findPosts({ where: { featured: { equals: true } }, limit: 1 }),
     findPosts({ limit: 20 }),
     findPosts({ where: { isOpinion: { equals: true } }, limit: 4 }),
+    getMostRead(5).catch(() => []),
   ])
 
   const lead: Post | undefined = featured.docs[0] ?? latest.docs[0]
@@ -67,6 +69,7 @@ export default async function HomePage() {
           {topStories.map((p) => (
             <StoryCard key={p.id} post={p} variant="list" />
           ))}
+          <MostRead posts={mostRead} />
         </aside>
       </section>
 

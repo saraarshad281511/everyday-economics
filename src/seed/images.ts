@@ -39,6 +39,6 @@ export async function makeArt(seed: number, palette: [string, string, string], w
 }
 
 export async function makeAvatar(initials: string, color: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="${color}"/><text x="200" y="245" text-anchor="middle" font-family="Georgia, serif" font-size="150" font-weight="700" fill="#f6f1e7">${initials}</text></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="${color}"/><text x="200" y="245" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="140" font-weight="700" fill="#ffffff">${initials}</text></svg>`
   return sharp(Buffer.from(svg)).jpeg({ quality: 85 }).toBuffer()
 }
