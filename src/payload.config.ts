@@ -52,7 +52,8 @@ export default buildConfig({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
       // Keep the database columns the same whether or not Blob is switched on
       alwaysInsertFields: true,
-      collections: { media: true },
+      // Pictures load straight from Vercel's image storage (fast, and independent of the site address)
+      collections: { media: { disablePayloadAccessControl: true } },
       token: process.env.BLOB_READ_WRITE_TOKEN || '',
     }),
   ],
