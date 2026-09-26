@@ -275,6 +275,8 @@ export async function seedContent(
 
   // Images are optional: if uploading fails (e.g. storage not set up yet), the articles
   // are still created without pictures. Running the seed again adds the missing images.
+  // Unique picture names, so a new picture never clashes with an old one
+  const uniq = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
   let imageError: string | undefined
   let imagesAdded = 0
   let imagesPending = 0
@@ -319,7 +321,7 @@ export async function seedContent(
     const existing = await findOne('users', 'email', email)
     const initials = a.name.split(' ').map((w) => w[0]).join('')
     const makePhoto = () =>
-      uploadImage(`Portrait of ${a.name}`, `author-${i + 1}.jpg`, () => makeAvatar(initials, a.color))
+      uploadImage(`Portrait of ${a.name}`, `author-${i + 1}-${uniq()}.jpg`, () => makeAvatar(initials, a.color))
     if (existing) {
       authorIds.push(existing.id)
       if (!existing.photo) {
@@ -354,7 +356,7 @@ export async function seedContent(
     const makeImage = () =>
       uploadImage(
         `Illustration for “${a.title}”`,
-        `article-${i + 1}.jpg`,
+        `article-${i + 1}-${uniq()}.jpg`,
         () => makeArt(i + 3, PALETTES[a.section]),
         'Sample illustration',
       )
