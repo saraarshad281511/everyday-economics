@@ -7,7 +7,8 @@ import type { Payload } from 'payload'
 import { makeArt, makeAvatar } from './images'
 import { doc, h2, p, quote, ul } from './lexical'
 
-const ctx = { disableRevalidate: true }
+// A fresh settings object for every save (the storage plugin writes notes onto it, so it must not be shared)
+const ctx = () => ({ disableRevalidate: true })
 const slugify = (t: string) => t.toLowerCase().normalize('NFKD').replace(/[’'’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 const SECTIONS = [
@@ -291,7 +292,7 @@ export async function seedContent(
         collection: 'media',
         data: { alt, ...(credit ? { credit } : {}) },
         file: { data: await make(), mimetype: 'image/jpeg', name, size: 0 },
-        context: ctx,
+        context: ctx(),
       })
       imagesAdded++
       return m.id
@@ -310,7 +311,7 @@ export async function seedContent(
       (await payload.create({
         collection: 'categories',
         data: { ...s, navOrder: (i + 1) * 10, showOnHomepage: true },
-        context: ctx,
+        context: ctx(),
       })).id
   }
 
@@ -326,7 +327,7 @@ export async function seedContent(
       authorIds.push(existing.id)
       if (!existing.photo) {
         const photo = await makePhoto()
-        if (photo) await payload.update({ collection: 'users', id: existing.id, data: { photo }, context: ctx })
+        if (photo) await payload.update({ collection: 'users', id: existing.id, data: { photo }, context: ctx() })
       }
       continue
     }
@@ -343,7 +344,7 @@ export async function seedContent(
         bio: a.bio,
         ...(photo ? { photo } : {}),
       },
-      context: ctx,
+      context: ctx(),
     })
     authorIds.push(u.id)
   }
@@ -364,7 +365,7 @@ export async function seedContent(
     if (existing) {
       if (!existing.heroImage) {
         const image = await makeImage()
-        if (image) await payload.update({ collection: 'posts', id: existing.id, data: { heroImage: image }, context: ctx })
+        if (image) await payload.update({ collection: 'posts', id: existing.id, data: { heroImage: image }, context: ctx() })
       }
       continue
     }
@@ -395,7 +396,7 @@ export async function seedContent(
         publishedAt: new Date(now - (i * 5 + 1) * 60 * 60 * 1000).toISOString(),
         _status: 'published',
       },
-      context: ctx,
+      context: ctx(),
     })
     created++
   }
@@ -411,7 +412,7 @@ export async function seedContent(
           collection: 'page-views',
           data: { post: post.id, count: (picks.length - rank) * 7 },
           overrideAccess: true,
-          context: ctx,
+          context: ctx(),
         })
       }
     }
@@ -420,7 +421,7 @@ export async function seedContent(
   log('Pages…')
   for (const pg of PAGES) {
     if (await findOne('pages', 'slug', pg.slug)) continue
-    await payload.create({ collection: 'pages', data: { ...pg, content: pg.content as never, showInFooter: true }, context: ctx })
+    await payload.create({ collection: 'pages', data: { ...pg, content: pg.content as never, showInFooter: true }, context: ctx() })
   }
 
   return { articlesCreated: created, imagesAdded, totalArticles: ARTICLES.length, imageError, imagesPending }
