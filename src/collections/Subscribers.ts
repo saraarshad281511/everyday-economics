@@ -5,7 +5,12 @@ import { adminsOrEditors } from '../access'
 export const Subscribers: CollectionConfig = {
   slug: 'subscribers',
   labels: { singular: 'Newsletter subscriber', plural: 'Newsletter subscribers' },
-  admin: { useAsTitle: 'email', defaultColumns: ['email', 'createdAt'], group: 'People' },
+  admin: {
+    useAsTitle: 'email',
+    defaultColumns: ['email', 'createdAt'],
+    group: 'People',
+    components: { beforeListTable: ['/components/admin/ExportSubscribers'] },
+  },
   access: {
     // Sign-ups come in through the site's own server action, not the public API
     create: adminsOrEditors,

@@ -243,7 +243,7 @@ const PAGES = [
     title: 'Contact',
     slug: 'contact',
     intro: 'Tips, corrections and pitches are always welcome.',
-    content: doc(p('Email us at hello@example.com. Update this address from the dashboard: Pages → Contact.')),
+    content: doc(p('Use the form below to send us a message – we read every one and usually reply within two working days.')),
   },
   {
     title: 'Privacy policy',

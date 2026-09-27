@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import React from 'react'
+import { ContactForm } from '@/components/site/ContactForm'
 import { Pagination } from '@/components/site/Pagination'
 import { RichText } from '@/components/site/RichText'
 import { StoryCard } from '@/components/site/StoryCard'
@@ -37,6 +38,7 @@ export default async function SlugPage({ params, searchParams }: Props) {
         <h1 className="headline headline--article">{page.title}</h1>
         {page.intro && <p className="standfirst standfirst--lg">{page.intro}</p>}
         <RichText data={page.content} className="prose" />
+        {page.slug === 'contact' && <ContactForm />}
       </article>
     )
   }

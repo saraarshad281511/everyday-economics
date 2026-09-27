@@ -124,10 +124,20 @@ src/
 - After changing a collection: `pnpm generate:types`. After adding dashboard components: `pnpm generate:importmap`.
 - Pages refresh every 60 seconds, and immediately whenever something is saved in the dashboard.
 
+### Emails (Resend)
+The site sends: new-subscriber alerts and contact-form messages to the address in **Dashboard → Site settings → Emails**, a welcome email to new subscribers, and dashboard password-reset emails.
+
+1. Create a free account at [resend.com](https://resend.com) and make an **API key** (API Keys → Create).
+2. In Vercel → Settings → Environment Variables add `RESEND_API_KEY` = the key, then redeploy.
+3. Until you verify a domain, Resend only delivers to **the email address you signed up to Resend with**. So alerts to that address work straight away, but welcome emails to readers and password resets for other people need step 4.
+4. **Verify the site's domain** in Resend (Domains → Add, then add the DNS records it shows at the domain registrar). Then add `EMAIL_FROM` = e.g. `news@yourdomain.com` in Vercel and redeploy.
+
+Optional: `EMAIL_FROM_NAME` (defaults to "The Everyday Economics"). Contact messages are also saved under **Dashboard → Contact messages**. Subscribers can be downloaded as a CSV from **Newsletter subscribers → Download as spreadsheet**.
+
 ### Checking picture uploads
 Log in to `/admin` as an Admin, then open `/next/check-images`. It uploads a tiny test picture, checks it can be viewed, deletes it, and shows a step-by-step report.
 
 ### Ideas for phase 2
 - Paywall / memberships (Stripe + a `subscriber` role, with an `isPremium` switch on articles)
-- Sending the newsletter (Resend or Mailchimp integration)
+- Sending newsletters from the dashboard (for now, export the CSV into Mailchimp or Brevo)
 - Comments, dark mode, live preview side-by-side in the editor

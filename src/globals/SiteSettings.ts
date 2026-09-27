@@ -58,6 +58,32 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'emails',
+      label: 'Emails',
+      type: 'group',
+      admin: {
+        description: 'Who gets notified, and the email new newsletter subscribers receive.',
+      },
+      fields: [
+        {
+          name: 'notifyEmail',
+          label: 'Send notifications to',
+          type: 'email',
+          defaultValue: 'marlina_serd@yahoo.com',
+          admin: { description: 'New subscribers and contact-form messages are emailed here.' },
+        },
+        { name: 'notifyOnSubscribe', label: 'Email me when someone subscribes', type: 'checkbox', defaultValue: true },
+        { name: 'sendWelcome', label: 'Send a welcome email to new subscribers', type: 'checkbox', defaultValue: true },
+        { name: 'welcomeSubject', label: 'Welcome email subject', type: 'text' },
+        {
+          name: 'welcomeMessage',
+          label: 'Welcome email message',
+          type: 'textarea',
+          admin: { description: 'Leave a blank line between paragraphs.' },
+        },
+      ],
+    },
+    {
       name: 'social',
       type: 'group',
       fields: [

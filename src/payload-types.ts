@@ -73,6 +73,7 @@ export interface Config {
     media: Media;
     users: User;
     subscribers: Subscriber;
+    messages: Message;
     'page-views': PageView;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -87,6 +88,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
+    messages: MessagesSelect<false> | MessagesSelect<true>;
     'page-views': PageViewsSelect<false> | PageViewsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -376,6 +378,20 @@ export interface Subscriber {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages".
+ */
+export interface Message {
+  id: number;
+  subject?: string | null;
+  name?: string | null;
+  email?: string | null;
+  message?: string | null;
+  handled?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "page-views".
  */
 export interface PageView {
@@ -432,6 +448,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'subscribers';
         value: number | Subscriber;
+      } | null)
+    | ({
+        relationTo: 'messages';
+        value: number | Message;
       } | null)
     | ({
         relationTo: 'page-views';
@@ -638,6 +658,19 @@ export interface SubscribersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages_select".
+ */
+export interface MessagesSelect<T extends boolean = true> {
+  subject?: T;
+  name?: T;
+  email?: T;
+  message?: T;
+  handled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "page-views_select".
  */
 export interface PageViewsSelect<T extends boolean = true> {
@@ -714,6 +747,22 @@ export interface SiteSetting {
       | null;
     note?: string | null;
   };
+  /**
+   * Who gets notified, and the email new newsletter subscribers receive.
+   */
+  emails?: {
+    /**
+     * New subscribers and contact-form messages are emailed here.
+     */
+    notifyEmail?: string | null;
+    notifyOnSubscribe?: boolean | null;
+    sendWelcome?: boolean | null;
+    welcomeSubject?: string | null;
+    /**
+     * Leave a blank line between paragraphs.
+     */
+    welcomeMessage?: string | null;
+  };
   social?: {
     x?: string | null;
     linkedin?: string | null;
@@ -744,6 +793,15 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               id?: T;
             };
         note?: T;
+      };
+  emails?:
+    | T
+    | {
+        notifyEmail?: T;
+        notifyOnSubscribe?: T;
+        sendWelcome?: T;
+        welcomeSubject?: T;
+        welcomeMessage?: T;
       };
   social?:
     | T

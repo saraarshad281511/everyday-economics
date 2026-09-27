@@ -1,5 +1,6 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { FixedToolbarFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -8,6 +9,7 @@ import sharp from 'sharp'
 
 import { Categories } from './collections/Categories'
 import { Media } from './collections/Media'
+import { Messages } from './collections/Messages'
 import { Pages } from './collections/Pages'
 import { PageViews } from './collections/PageViews'
 import { Posts } from './collections/Posts'
@@ -33,11 +35,20 @@ export default buildConfig({
       },
     },
   },
-  collections: [Posts, Categories, Pages, Media, Users, Subscribers, PageViews],
+  collections: [Posts, Categories, Pages, Media, Users, Subscribers, Messages, PageViews],
   globals: [SiteSettings],
   editor: lexicalEditor({
     features: ({ defaultFeatures }) => [...defaultFeatures, FixedToolbarFeature()],
   }),
+  // Emails (password resets, new-subscriber alerts, welcome emails, contact form) are sent with Resend.
+  // Without RESEND_API_KEY, emails are only written to the server log.
+  email: process.env.RESEND_API_KEY
+    ? resendAdapter({
+        apiKey: process.env.RESEND_API_KEY,
+        defaultFromAddress: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+        defaultFromName: process.env.EMAIL_FROM_NAME || 'The Everyday Economics',
+      })
+    : undefined,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: postgresAdapter({
