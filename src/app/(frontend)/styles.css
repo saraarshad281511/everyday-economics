@@ -638,3 +638,7 @@ figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px; line-height:
   border: 1px solid var(--rule); background: var(--surface); font-size: 14px; font-weight: 600;
 }
 .subsection-chips a:hover, .subsection-chips a[aria-current='page'] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+
+/* Section blocks on the homepage: every story has a picture; only the first keeps its summary */
+.section-block__grid > .card--image:not(:first-child) .standfirst { display: none; }
+.section-block__grid > .card--image:not(:first-child) .headline { font-size: 18px; }

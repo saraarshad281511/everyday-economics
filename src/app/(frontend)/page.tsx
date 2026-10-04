@@ -111,7 +111,7 @@ export default async function HomePage() {
               <div className="grid-4 section-block__grid">
                 <StoryCard post={first} variant="image" showSection={false} />
                 {rest.map((p) => (
-                  <StoryCard key={p.id} post={p} variant="text" showSection={false} />
+                  <StoryCard key={p.id} post={p} variant="image" showSection={false} />
                 ))}
               </div>
             </section>
