@@ -3,6 +3,7 @@ import type { Category } from '@/payload-types'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
+import { buildSectionTree } from '@/lib/sections'
 
 export function MobileMenu({ categories }: { categories: Category[] }) {
   const [open, setOpen] = useState(false)
@@ -22,9 +23,18 @@ export function MobileMenu({ categories }: { categories: Category[] }) {
           <li>
             <Link href="/">Home</Link>
           </li>
-          {categories.map((c) => (
+          {buildSectionTree(categories).map((c) => (
             <li key={c.id}>
               <Link href={`/${c.slug}`}>{c.title}</Link>
+              {c.children.length > 0 && (
+                <ul className="drawer__sub">
+                  {c.children.map((ch) => (
+                    <li key={ch.id}>
+                      <Link href={`/${ch.slug}`}>{ch.title}</Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
           <li>

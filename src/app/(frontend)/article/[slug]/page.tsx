@@ -9,7 +9,7 @@ import { ViewTracker } from '@/components/site/interactive/ViewTracker'
 import { draftMode } from 'next/headers'
 import { RichText } from '@/components/site/RichText'
 import { StoryCard } from '@/components/site/StoryCard'
-import { asAuthors, asCategory, asMedia, formatDate, siteURL } from '@/lib/format'
+import { asAuthors, asCategory, asMedia, formatDateline, siteURL } from '@/lib/format'
 import { findPosts, getPostBySlug, getRecentSlugs, getSiteSettings } from '@/lib/payload'
 
 export const revalidate = 60
@@ -75,97 +75,108 @@ export default async function ArticlePage({ params }: Props) {
     mainEntityOfPage: url,
   }
 
+  const parent = category?.parent && typeof category.parent === 'object' ? category.parent : null
+
   return (
     <article className="article">
       <ReadingProgress />
       {!draft.isEnabled && <ViewTracker id={post.id} />}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <header className="article__header container container--narrow">
-        <p>
-          {post.isOpinion ? (
-            <span className="kicker kicker--opinion">Opinion</span>
-          ) : (
-            category && (
-              <Link href={`/${category.slug}`} className="kicker">
-                {category.title}
-              </Link>
-            )
-          )}
-        </p>
-        <h1 className="headline headline--article">{post.title}</h1>
-        {post.standfirst && <p className="standfirst standfirst--lg">{post.standfirst}</p>}
-      </header>
 
-      {image && (
-        <figure className="article__hero container">
-          <Img media={image} size="hero" sizes="(max-width: 1100px) 100vw, 1100px" priority />
-          {(image.caption || image.credit) && (
-            <figcaption>
-              {image.caption} {image.credit && <span className="credit">{image.credit}</span>}
-            </figcaption>
+      <div className="container art-grid">
+        {/* Left column, top: section label */}
+        <div className="art-label">
+          {post.isOpinion && <span className="art-label__opinion">Opinion</span>}
+          {parent && (
+            <Link href={`/${parent.slug}`} className="art-label__parent">
+              {parent.title}
+            </Link>
           )}
-        </figure>
-      )}
+          {category && (
+            <Link href={`/${category.slug}`} className="art-label__section">
+              {category.title}
+            </Link>
+          )}
+        </div>
 
-      <div className="container container--narrow">
-        <div className="byline">
-          <div className="byline__people">
-            {authors.map((a) => {
-              const photo = asMedia(a.photo)
-              return (
-                <Link key={a.id} href={`/author/${a.slug}`} className="byline__person">
-                  {photo && <Img media={photo} size="square" className="avatar avatar--sm" />}
-                  <span>{a.name}</span>
-                </Link>
-              )
-            })}
-          </div>
-          <p className="meta">
-            <time dateTime={post.publishedAt || undefined}>{formatDate(post.publishedAt, true)}</time>
-            {post.readingTime ? ` · ${post.readingTime} min read` : ''}
+        <h1 className="headline headline--article art-title">{post.title}</h1>
+        {post.standfirst && <p className="standfirst standfirst--lg art-standfirst">{post.standfirst}</p>}
+
+        {/* Left column, lower: byline, date and actions */}
+        <aside className="art-meta" aria-label="About this article">
+          <div className="art-meta__rule" aria-hidden />
+          {authors.length > 0 && (
+            <p className="art-byline">
+              {authors.map((a, i) => (
+                <React.Fragment key={a.id}>
+                  {i > 0 && <em className="art-byline__and">{i === authors.length - 1 ? ' and ' : ', '}</em>}
+                  <Link href={`/author/${a.slug}`}>{a.name}</Link>
+                </React.Fragment>
+              ))}
+            </p>
+          )}
+          {authors.length === 1 && authors[0].jobTitle && <p className="art-meta__role">{authors[0].jobTitle}</p>}
+          <p className="art-meta__date">
+            <time dateTime={post.publishedAt || undefined}>{formatDateline(post.publishedAt)}</time>
           </p>
-          <ArticleActions
-            article={{
-              slug: post.slug as string,
-              title: post.title,
-              standfirst: post.standfirst,
-              section: post.isOpinion ? 'Opinion' : category?.title,
-            }}
-          />
-          <div className="share" aria-label="Share this article">
-            <a href={`https://twitter.com/intent/tweet?text=${shareText}&url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">X</a>
-            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">LinkedIn</a>
-            <a href={`https://wa.me/?text=${shareText}%20${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
-            <a href={`mailto:?subject=${shareText}&body=${encodeURIComponent(url)}`}>Email</a>
+          {post.readingTime ? <p className="art-meta__date">{post.readingTime} min read</p> : null}
+          <div className="art-meta__actions">
+            <ArticleActions
+              article={{
+                slug: post.slug as string,
+                title: post.title,
+                standfirst: post.standfirst,
+                section: post.isOpinion ? 'Opinion' : category?.title,
+              }}
+            />
+            <div className="share" aria-label="Share this article">
+              <a href={`https://twitter.com/intent/tweet?text=${shareText}&url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">X</a>
+              <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <a href={`https://wa.me/?text=${shareText}%20${encodeURIComponent(url)}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              <a href={`mailto:?subject=${shareText}&body=${encodeURIComponent(url)}`}>Email</a>
+            </div>
           </div>
-        </div>
+        </aside>
 
-        <div id="article-body">
-          <RichText data={post.content} className="prose" />
-        </div>
-
-        {post.tags && post.tags.length > 0 && (
-          <ul className="tags" aria-label="Topics">
-            {post.tags.map((t) => (
-              <li key={t}>
-                <Link href={`/search?tag=${encodeURIComponent(t)}`}>{t}</Link>
-              </li>
-            ))}
-          </ul>
+        {image && (
+          <figure className="art-hero">
+            <Img media={image} size="hero" sizes="(max-width: 900px) 100vw, 860px" priority />
+            {(image.caption || image.credit) && (
+              <figcaption>
+                {image.caption} {image.credit && <span className="credit">{image.credit}</span>}
+              </figcaption>
+            )}
+          </figure>
         )}
 
-        {authors.map((a) => (
-          <aside key={a.id} className="author-box">
-            {asMedia(a.photo) && <Img media={asMedia(a.photo)} size="square" className="avatar" />}
-            <div>
-              <p className="author-box__name">
-                <Link href={`/author/${a.slug}`}>{a.name}</Link>
-                {a.jobTitle && <span> · {a.jobTitle}</span>}
-              </p>
-              {a.bio && <p>{a.bio}</p>}
-            </div>
-          </aside>
-        ))}
+        <div className="art-body">
+          <div id="article-body">
+            <RichText data={post.content} className="prose" />
+          </div>
+
+          {post.tags && post.tags.length > 0 && (
+            <ul className="tags" aria-label="Topics">
+              {post.tags.map((t) => (
+                <li key={t}>
+                  <Link href={`/search?tag=${encodeURIComponent(t)}`}>{t}</Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {authors.map((a) => (
+            <aside key={a.id} className="author-box">
+              {asMedia(a.photo) && <Img media={asMedia(a.photo)} size="square" className="avatar" />}
+              <div>
+                <p className="author-box__name">
+                  <Link href={`/author/${a.slug}`}>{a.name}</Link>
+                  {a.jobTitle && <span> · {a.jobTitle}</span>}
+                </p>
+                {a.bio && <p>{a.bio}</p>}
+              </div>
+            </aside>
+          ))}
+        </div>
       </div>
 
       {related.length > 0 && (

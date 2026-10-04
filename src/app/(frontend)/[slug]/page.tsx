@@ -6,6 +6,8 @@ import { Pagination } from '@/components/site/Pagination'
 import { RichText } from '@/components/site/RichText'
 import { StoryCard } from '@/components/site/StoryCard'
 import { findPosts, getCategories, getPayloadClient } from '@/lib/payload'
+import { findParent, sectionAndChildIds } from '@/lib/sections'
+import Link from 'next/link'
 
 export const revalidate = 60
 
@@ -44,24 +46,58 @@ export default async function SlugPage({ params, searchParams }: Props) {
   }
   if (!category) notFound()
 
+  const categories = await getCategories()
+  const parent = findParent(category, categories)
+  const main = parent ?? category
+  const subsections = categories.filter((c) => {
+    const pid = c.parent && typeof c.parent === 'object' ? c.parent.id : c.parent
+    return pid === main.id
+  })
+  // On a main section with sub-sections, label each story with its sub-section
+  const showLabels = category.id === main.id && subsections.length > 0
   const pageNum = Math.max(1, Number((await searchParams).page) || 1)
-  const posts = await findPosts({ where: { category: { equals: category.id } }, limit: 12, page: pageNum })
+  const posts = await findPosts({
+    where: { category: { in: sectionAndChildIds(category, categories) } },
+    limit: 12,
+    page: pageNum,
+  })
   const [first, ...rest] = posts.docs
 
   return (
     <div className="container">
       <header className="page-header">
+        {parent && (
+          <p className="section-crumb">
+            <Link href={`/${parent.slug}`}>{parent.title}</Link>
+          </p>
+        )}
         <h1 className="page-header__title">{category.title}</h1>
         {category.description && <p className="page-header__desc">{category.description}</p>}
+        {subsections.length > 0 && (
+          <ul className="subsection-chips" aria-label={`${main.title} sections`}>
+            <li>
+              <Link href={`/${main.slug}`} aria-current={category.id === main.id ? 'page' : undefined}>
+                All {main.title}
+              </Link>
+            </li>
+            {subsections.map((c) => (
+              <li key={c.id}>
+                <Link href={`/${c.slug}`} aria-current={category.id === c.id ? 'page' : undefined}>
+                  {c.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </header>
       {!first ? (
         <p className="empty">No articles in this section yet.</p>
       ) : (
         <>
-          {pageNum === 1 && <StoryCard post={first} variant="lead" showSection={false} priority />}
+          {pageNum === 1 && <StoryCard post={first} variant="lead" showSection={showLabels} priority />}
           <div className="stream">
             {(pageNum === 1 ? rest : posts.docs).map((p) => (
-              <StoryCard key={p.id} post={p} variant="row" showSection={false} />
+              <StoryCard key={p.id} post={p} variant="row" showSection={showLabels} />
             ))}
           </div>
           <Pagination page={pageNum} totalPages={posts.totalPages} base={`/${category.slug}`} />

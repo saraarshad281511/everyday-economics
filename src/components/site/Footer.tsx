@@ -22,7 +22,7 @@ export function Footer({
         <div>
           <h2 className="footer__heading">Sections</h2>
           <ul>
-            {categories.map((c) => (
+            {categories.filter((c) => !c.parent).map((c) => (
               <li key={c.id}>
                 <Link href={`/${c.slug}`}>{c.title}</Link>
               </li>

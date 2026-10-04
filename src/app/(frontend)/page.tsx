@@ -5,6 +5,7 @@ import { MostRead } from '@/components/site/MostRead'
 import { Newsletter } from '@/components/site/Newsletter'
 import { StoryCard } from '@/components/site/StoryCard'
 import { findPosts, getCategories, getMostRead, getSiteSettings } from '@/lib/payload'
+import { sectionAndChildIds } from '@/lib/sections'
 
 export const revalidate = 60
 
@@ -48,12 +49,12 @@ export default async function HomePage() {
 
   const sectionBlocks = await Promise.all(
     categories
-      .filter((c) => c.showOnHomepage)
+      .filter((c) => c.showOnHomepage && !c.parent)
       .map(async (c) => ({
         category: c,
         posts: (
           await findPosts({
-            where: { and: [{ category: { equals: c.id } }, { id: { not_equals: lead.id } }] },
+            where: { and: [{ category: { in: sectionAndChildIds(c, categories) } }, { id: { not_equals: lead.id } }] },
             limit: 4,
           })
         ).docs,

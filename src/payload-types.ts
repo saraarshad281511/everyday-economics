@@ -281,6 +281,10 @@ export interface Category {
   generateSlug?: boolean | null;
   slug: string;
   /**
+   * Leave empty for a main section. Pick one to make this a sub-section that appears in its dropdown menu.
+   */
+  parent?: (number | null) | Category;
+  /**
    * Shown at the top of the section page.
    */
   description?: string | null;
@@ -289,7 +293,7 @@ export interface Category {
    */
   navOrder?: number | null;
   /**
-   * Show a block for this section on the homepage.
+   * Main sections only: show a block for this section (including its sub-sections) on the homepage.
    */
   showOnHomepage?: boolean | null;
   updatedAt: string;
@@ -531,6 +535,7 @@ export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
+  parent?: T;
   description?: T;
   navOrder?: T;
   showOnHomepage?: T;

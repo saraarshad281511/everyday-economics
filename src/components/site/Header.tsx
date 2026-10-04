@@ -6,6 +6,7 @@ import { StickyWatcher } from './interactive/StickyWatcher'
 import { ThemeToggle } from './interactive/ThemeToggle'
 import { MobileMenu } from './MobileMenu'
 import { Ticker } from './Ticker'
+import { buildSectionTree } from '@/lib/sections'
 
 export function Header({
   siteName,
@@ -77,11 +78,32 @@ export function Header({
             <li>
               <Link href="/">Home</Link>
             </li>
-            {categories.map((c) => (
-              <li key={c.id}>
-                <Link href={`/${c.slug}`}>{c.title}</Link>
-              </li>
-            ))}
+            {buildSectionTree(categories).map((c) =>
+              c.children.length === 0 ? (
+                <li key={c.id}>
+                  <Link href={`/${c.slug}`}>{c.title}</Link>
+                </li>
+              ) : (
+                <li key={c.id} className="has-sub">
+                  <Link href={`/${c.slug}`} aria-haspopup="true">
+                    {c.title}
+                    <svg className="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden>
+                      <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                    </svg>
+                  </Link>
+                  <ul className="subnav" aria-label={`${c.title} sections`}>
+                    <li>
+                      <Link href={`/${c.slug}`}>All {c.title}</Link>
+                    </li>
+                    {c.children.map((ch) => (
+                      <li key={ch.id}>
+                        <Link href={`/${ch.slug}`}>{ch.title}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ),
+            )}
           </ul>
         </div>
       </nav>

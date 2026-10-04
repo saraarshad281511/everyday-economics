@@ -97,7 +97,7 @@ To load the sample content into production, log in to `/admin` as an Admin, then
    - **To unpublish:** open the ⋮ menu next to *Publish changes* → *Unpublish*.
 
 Other things she can change herself:
-- **Sections:** add, rename or reorder the menu (lower *navOrder* comes first).
+- **Sections:** add, rename or reorder the menu (lower *navOrder* comes first). To make a **sub-section** (e.g. Economy → Inflation), create a section and choose its **Parent section** in the right-hand column. Sub-sections appear in a dropdown under their main section, and the main section's page lists their articles too.
 - **Pages:** About, Contact, Privacy policy.
 - **Site settings:** site name, tagline, newsletter text, social links.
 - **Authors & Users:** add writers and give them the *Author* role so they can only edit their own articles.

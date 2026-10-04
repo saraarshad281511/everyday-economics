@@ -20,6 +20,22 @@ const SECTIONS = [
   { title: 'Life & Arts', slug: 'life-arts', description: 'Books, culture and the economics of everyday life.' },
 ]
 
+const SUBSECTIONS = [
+  { title: 'Inflation', slug: 'inflation', parent: 'economy', description: 'Prices, wages and the cost of living.' },
+  { title: 'Jobs', slug: 'jobs', parent: 'economy', description: 'Work, pay and the labour market.' },
+  { title: 'Central Banks', slug: 'central-banks', parent: 'economy', description: 'Interest rates and the institutions that set them.' },
+  { title: 'Bonds', slug: 'bonds', parent: 'markets', description: 'Government and corporate debt markets.' },
+  { title: 'Currencies', slug: 'currencies', parent: 'markets', description: 'The rupee, the dollar and everything in between.' },
+  { title: 'Commodities', slug: 'commodities', parent: 'markets', description: 'Gold, oil and the raw materials that move prices.' },
+  { title: 'Saving', slug: 'saving', parent: 'personal-finance', description: 'Budgets, emergency funds and everyday money habits.' },
+  { title: 'Investing', slug: 'investing', parent: 'personal-finance', description: 'Growing your money over the long term.' },
+]
+
+// Which sample articles belong to a sub-section (by position in ARTICLES)
+const ARTICLE_SUBSECTION: Record<number, string> = {
+  0: 'inflation', 1: 'central-banks', 2: 'jobs', 3: 'bonds', 4: 'currencies', 5: 'commodities', 9: 'saving', 10: 'investing', 11: 'saving',
+}
+
 const PALETTES: Record<string, [string, string, string]> = {
   economy: ['#e8edf5', '#1d3f8f', '#c2410c'],
   markets: ['#0f1a33', '#3b6fd9', '#f59e0b'],
@@ -315,6 +331,24 @@ export async function seedContent(
       })).id
   }
 
+  for (const [i, sub] of SUBSECTIONS.entries()) {
+    const existing = await findOne('categories', 'slug', sub.slug)
+    sectionIds[sub.slug] =
+      existing?.id ??
+      (await payload.create({
+        collection: 'categories',
+        data: {
+          title: sub.title,
+          slug: sub.slug,
+          description: sub.description,
+          parent: sectionIds[sub.parent],
+          navOrder: (i + 1) * 10,
+          showOnHomepage: false,
+        },
+        context: ctx(),
+      })).id
+  }
+
   log('Authors…')
   const authorIds: number[] = []
   for (const [i, a] of AUTHORS.entries()) {
@@ -362,6 +396,11 @@ export async function seedContent(
         'Sample illustration',
       )
     const existing = await findOne('posts', 'slug', slug)
+    const subSlug = ARTICLE_SUBSECTION[i]
+    const targetCategory = subSlug ? sectionIds[subSlug] : sectionIds[a.section]
+    if (existing && subSlug && existing.category === sectionIds[a.section]) {
+      await payload.update({ collection: 'posts', id: existing.id, data: { category: targetCategory }, context: ctx() })
+    }
     if (existing) {
       if (!existing.heroImage) {
         const image = await makeImage()
@@ -387,7 +426,7 @@ export async function seedContent(
         standfirst: a.standfirst,
         ...(image ? { heroImage: image } : {}),
         content: doc(...children) as never,
-        category: sectionIds[a.section],
+        category: targetCategory,
         authors: [authorIds[a.author]],
         tags: a.tags,
         featured: Boolean(a.featured),
