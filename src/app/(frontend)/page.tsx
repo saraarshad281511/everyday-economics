@@ -101,6 +101,11 @@ export default async function HomePage() {
         .filter((b) => b.posts.length > 0)
         .map(({ category, posts }) => {
           const [first, ...rest] = posts
+          // Label stories that sit in a sub-section (e.g. "Inflation" inside the Economy block)
+          const isSub = (p: Post) => {
+            const c = p.category
+            return Boolean(c && typeof c === 'object' && c.id !== category.id)
+          }
           return (
             <section key={category.id} className="section-block" aria-labelledby={`sec-${category.id}`}>
               <h2 id={`sec-${category.id}`} className="rule-heading">
@@ -109,9 +114,9 @@ export default async function HomePage() {
                 </Link>
               </h2>
               <div className="grid-4 section-block__grid">
-                <StoryCard post={first} variant="image" showSection={false} />
+                <StoryCard post={first} variant="image" showSection={isSub(first)} />
                 {rest.map((p) => (
-                  <StoryCard key={p.id} post={p} variant="image" showSection={false} />
+                  <StoryCard key={p.id} post={p} variant="image" showSection={isSub(p)} />
                 ))}
               </div>
             </section>
