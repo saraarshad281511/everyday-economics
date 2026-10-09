@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import sharp from 'sharp'
 import { getPayloadClient } from '@/lib/payload'
+import { useR2 } from '@/lib/storage'
 
 export const maxDuration = 30
 
@@ -26,8 +27,9 @@ export async function GET() {
 
   const token = process.env.BLOB_READ_WRITE_TOKEN || ''
   const lines: string[] = []
-  lines.push(`Blob token present: ${token ? 'yes' : 'NO'}`)
-  if (token) {
+  lines.push(`Picture storage: ${useR2 ? 'Cloudflare R2' : token ? 'Vercel Blob' : 'local disk (development only)'}`)
+  if (!useR2) lines.push(`Blob token present: ${token ? 'yes' : 'NO'}`)
+  if (token && !useR2) {
     const looksRight = /^vercel_blob_rw_[a-z\d]+_[a-z\d]+$/i.test(token)
     lines.push(`Blob token format OK: ${looksRight ? 'yes' : 'NO (check for quotes or spaces around it)'}`)
   }

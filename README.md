@@ -137,6 +137,37 @@ Optional: `EMAIL_FROM_NAME` (defaults to "The Everyday Economics"). Contact mess
 ### Checking picture uploads
 Log in to `/admin` as an Admin, then open `/next/check-images`. It uploads a tiny test picture, checks it can be viewed, deletes it, and shows a step-by-step report.
 
+---
+
+## Hosting on Netlify (free plan, commercial use allowed)
+
+The site runs on Netlify with: **Neon** (database), **Cloudflare R2** (pictures), **Resend** (emails). All have free plans.
+
+**Environment variables** (Netlify → Site configuration → Environment variables):
+
+| Name | What it is |
+|---|---|
+| `DATABASE_URL` | Neon connection string (pooled), without `&channel_binding=require` |
+| `PAYLOAD_SECRET` | Long random string – keep the same one forever |
+| `NEXT_PUBLIC_SERVER_URL` | The site address, e.g. `https://herdomain.com` (no slash at the end) |
+| `R2_ACCOUNT_ID` | Cloudflare account ID |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 API token (Object Read & Write on the bucket) |
+| `R2_BUCKET` | Bucket name, e.g. `everyday-media` |
+| `R2_PUBLIC_URL` | The bucket's public address, e.g. `https://pub-xxxx.r2.dev` or a custom domain |
+| `RESEND_API_KEY` | Resend API key (optional) |
+| `EMAIL_FROM` | e.g. `news@herdomain.com` once the domain is verified in Resend (optional) |
+| `OLD_MEDIA_BASE_URL` | Only for moving pictures from Vercel Blob (see below) |
+
+**Moving from Vercel:**
+1. Neon → *Projects* → **Import Data Assistant**: paste the old `DATABASE_URL`, choose region **AWS us-east-2 (Ohio)** (Netlify's free plan runs server code in Ohio).
+2. Create the R2 bucket, enable its public access, create an API token.
+3. Create the Netlify site from the GitHub repo, add the variables above, set `OLD_MEDIA_BASE_URL` to the old Vercel Blob address (`https://xxxx.public.blob.vercel-storage.com`), deploy.
+4. Log in at `/admin`, open `/next/copy-images` and refresh until it says *All pictures copied*.
+5. Open `/next/check-images` to confirm uploads work. Remove `OLD_MEDIA_BASE_URL` afterwards.
+6. Point the domain at Netlify, update `NEXT_PUBLIC_SERVER_URL`, redeploy. Then switch off the Vercel project.
+
+Free plan limits: about 300 credits a month (each deploy uses ~15, traffic ~20 per GB). If they run out the site pauses until the next month.
+
 ### Ideas for phase 2
 - Paywall / memberships (Stripe + a `subscriber` role, with an `isPremium` switch on articles)
 - Sending newsletters from the dashboard (for now, export the CSV into Mailchimp or Brevo)

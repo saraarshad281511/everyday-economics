@@ -1,6 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { FixedToolbarFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { resendAdapter } from '@payloadcms/email-resend'
+import { s3Storage } from '@payloadcms/storage-s3'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -17,6 +18,7 @@ import { Subscribers } from './collections/Subscribers'
 import { Users } from './collections/Users'
 import { SiteSettings } from './globals/SiteSettings'
 import { migrations } from './migrations'
+import { r2, r2Endpoint, r2FileURL, useR2 } from './lib/storage'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -53,14 +55,38 @@ export default buildConfig({
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL || '' },
+    // Only auto-adjust the database during local development – never on Netlify/Vercel, where migrations are used
+    push: process.env.NODE_ENV !== 'production' && !process.env.NETLIFY && !process.env.NETLIFY_DEV && !process.env.VERCEL,
     // In production, database tables are created/updated automatically on start-up
     prodMigrations: migrations,
   }),
   sharp,
   plugins: [
-    // Stores uploaded images in Vercel Blob when deployed (local disk during development)
+    // Pictures on Cloudflare R2 (Netlify setup) – used when the R2_* settings are present
+    s3Storage({
+      enabled: useR2,
+      alwaysInsertFields: true,
+      bucket: r2.bucket,
+      collections: {
+        media: {
+          // Pictures load straight from R2's public address (fast, no extra server work)
+          disablePayloadAccessControl: true,
+          generateFileURL: ({ filename, prefix }) => r2FileURL(filename, prefix),
+        },
+      },
+      config: {
+        endpoint: r2Endpoint(),
+        region: 'auto',
+        forcePathStyle: true,
+        credentials: { accessKeyId: r2.accessKeyId, secretAccessKey: r2.secretAccessKey },
+        // Recommended for Cloudflare R2 with recent AWS SDK versions
+        requestChecksumCalculation: 'WHEN_REQUIRED',
+        responseChecksumValidation: 'WHEN_REQUIRED',
+      },
+    }),
+    // Pictures on Vercel Blob (original Vercel setup) – only when R2 isn't configured
     vercelBlobStorage({
-      enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+      enabled: !useR2 && Boolean(process.env.BLOB_READ_WRITE_TOKEN),
       // Keep the database columns the same whether or not Blob is switched on
       alwaysInsertFields: true,
       // Pictures load straight from Vercel's image storage (fast, and independent of the site address)
