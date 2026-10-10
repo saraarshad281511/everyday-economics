@@ -21,10 +21,32 @@ import { migrations } from './migrations'
 import { r2, r2Endpoint, r2FileURL, useR2 } from './lib/storage'
 
 const filename = fileURLToPath(import.meta.url)
+
+// The site address, without a slash at the end
+const serverURL = (process.env.NEXT_PUBLIC_SERVER_URL || '').trim().replace(/\/+$/, '')
+
+// Addresses the dashboard accepts saves from: the site address (with and without www)
+// plus the hosting addresses (e.g. xxx.netlify.app, xxx.vercel.app)
+const withAndWithoutWww = (u: string) => {
+  try {
+    const url = new URL(u)
+    const bare = url.hostname.replace(/^www\./, '')
+    return [`${url.protocol}//${bare}`, `${url.protocol}//www.${bare}`]
+  } catch {
+    return []
+  }
+}
+const allowedOrigins = Array.from(
+  new Set([
+    ...withAndWithoutWww(serverURL),
+    ...(process.env.SITE_ADDRESSES || '').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean),
+  ]),
+)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || '',
+  serverURL,
+  csrf: allowedOrigins,
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },

@@ -16,6 +16,20 @@ export const Users: CollectionConfig = {
   },
   auth: true,
   hooks: {
+    // If the slug was left empty, make one from the name (e.g. "Marlina Serd" -> "marlina-serd")
+    beforeValidate: [
+      ({ data }) => {
+        if (data && !data.slug && typeof data.name === 'string') {
+          data.slug = data.name
+            .toLowerCase()
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+        }
+        return data
+      },
+    ],
     beforeChange: [
       // The very first account created on a new site is always an Admin
       async ({ data, operation, req }) => {
