@@ -22,7 +22,8 @@ const siteAddresses = [
   .join(',')
 
 const nextConfig: NextConfig = {
-  env: { SITE_ADDRESSES: siteAddresses },
+  // SITE_PASSWORD is baked in while building, so the lock works on every host
+  env: { SITE_ADDRESSES: siteAddresses, SITE_PASSWORD: process.env.SITE_PASSWORD || '' },
   images: {
     localPatterns: [
       {
